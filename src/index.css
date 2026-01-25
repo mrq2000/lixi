@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-red-50 via-red-100 to-red-200 min-h-screen;
+  }
+}
+
+@layer utilities {
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    position: absolute;
+    animation: confetti-fall 3s linear infinite;
+  }
+  
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  /* Smooth scrolling for mobile */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar for webkit browsers - hidden on mobile */
+  .smooth-scroll::-webkit-scrollbar {
+    height: 0px;
+    display: none;
+  }
+
+  .smooth-scroll::-webkit-scrollbar-track {
+    display: none;
+  }
+
+  .smooth-scroll::-webkit-scrollbar-thumb {
+    display: none;
+  }
+}
+
