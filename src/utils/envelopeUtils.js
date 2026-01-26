@@ -38,8 +38,9 @@ export const getEnvelopeImage = (index, evelopImages = ENVELOPE_IMAGES) => {
   return evelopImages[index % evelopImages.length]
 }
 
-export const getFanStyle = (index, total, isMobile = false, scrollProgress = 0) => {
-  const centerIndex = (total - 1) / 2
+
+export const getFanStyle = (index, total, isMobile = false, scrollProgress = 0, activeIndex = null) => {
+  const centerIndex = activeIndex !== null ? activeIndex : (total - 1) / 2
   const offset = index - centerIndex
   const maxRotation = total > 5 ? 30 : 20
   const baseRotation = total > 1 ? (offset / Math.max(centerIndex, 1)) * maxRotation : 0

@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getLuckyMoneyList, removeFromList } from '../utils/storage'
 import Decorations from '../components/Decorations'
-import EnvelopeItem from '../components/EnvelopeItem'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { getEnvelopeImage, ENVELOPE_IMAGES, getFanStyle, getLeftPercent, formatAmount } from '../utils/envelopeUtils'
+import { getEnvelopeImage, ENVELOPE_IMAGES, formatAmount } from '../utils/envelopeUtils'
+import DrawPageMobile from './DrawPageMobile'
+import DrawPageDesktop from './DrawPageDesktop'
 
 function DrawPage() {
   const [list, setList] = useState([])
@@ -13,10 +14,7 @@ function DrawPage() {
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [selectedImage, setSelectedImage] = useState(null)
   const [activeIndex, setActiveIndex] = useState(null)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const scrollContainerRef = useRef(null)
-  const envelopesContainerRef = useRef(null)
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
 
   const randomEnvelopeImages = useMemo(() => {
     return [...ENVELOPE_IMAGES].sort(() => Math.random() - 0.5)
@@ -26,52 +24,6 @@ function DrawPage() {
     loadList()
   }, [])
 
-  // Handle scroll để tạo hiệu ứng di chuyển theo elip trên mobile
-  useEffect(() => {
-    if (!isMobile) return
-    
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft
-      const scrollWidth = container.scrollWidth - container.clientWidth
-      const progress = scrollWidth > 0 ? scrollLeft / scrollWidth : 0
-      setScrollProgress(progress)
-    }
-
-    // Trigger initial calculation
-    handleScroll()
-    
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    container.addEventListener('touchmove', handleScroll, { passive: true })
-    
-    return () => {
-      container.removeEventListener('scroll', handleScroll)
-      container.removeEventListener('touchmove', handleScroll)
-    }
-  }, [list.length, isMobile])
-
-  // Handle click outside để xóa activeIndex
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showResult || activeIndex === null) return
-
-      const container = envelopesContainerRef.current
-      if (container && !container.contains(event.target)) {
-        setActiveIndex(null)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('touchstart', handleClickOutside)
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('touchstart', handleClickOutside)
-    }
-  }, [activeIndex, showResult])
-
   const loadList = () => {
     const savedList = getLuckyMoneyList()
     setList(savedList)
@@ -80,7 +32,6 @@ function DrawPage() {
     setSelectedIndex(null)
     setSelectedImage(null)
     setActiveIndex(null)
-    setScrollProgress(0)
   }
 
   const createConfetti = () => {
@@ -101,8 +52,9 @@ function DrawPage() {
 
   const handleEnvelopeClick = (index) => {
     if (showResult) return
-    // Chỉ set active, không chọn luôn
-    setActiveIndex(index)
+    if (!isMobile) {
+      setActiveIndex(index)
+    }
   }
 
   const handleConfirm = (index) => {
@@ -147,105 +99,9 @@ function DrawPage() {
     }
   }
 
-  // Render envelopes
-  const renderEnvelopes = () => {
-    if (list.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <div className="text-8xl mb-4">📭</div>
-          <p className="text-xl text-gray-700">Không còn phong bì nào trong danh sách!</p>
-        </div>
-      )
-    }
-
-    if (isMobile) {
-      const scrollWidth = Math.max(list.length * 600, typeof window !== 'undefined' ? window.innerWidth * 5 : 5000)
-      
-      return (
-        <>
-          {/* Scroll container để trigger scroll event */}
-          <div
-            ref={scrollContainerRef}
-            className="overflow-x-auto smooth-scroll -mx-4 px-4"
-            style={{ 
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-x',
-              height: '80px',
-              overflowY: 'hidden',
-              position: 'relative',
-              width: 'calc(100% + 2rem)',
-              marginLeft: '-1rem',
-              marginRight: '-1rem',
-            }}
-          >
-            <div
-              style={{
-                width: `${scrollWidth}px`,
-                height: '1px',
-                opacity: 0,
-                pointerEvents: 'none',
-              }}
-            />
-          </div>
-
-          <div
-            ref={envelopesContainerRef}
-            className="relative mx-auto flex justify-center items-end"
-            style={{ width: '100%', minHeight: '300px', perspective: '1000px', overflow: 'hidden' }}
-          >
-            {list.map((amount, index) => (
-              <EnvelopeItem
-                key={index}
-                index={index}
-                imageUrl={getEnvelopeImage(index, randomEnvelopeImages)}
-                fanStyle={getFanStyle(index, list.length, true, scrollProgress)}
-                leftPercent={getLeftPercent(index, list.length)}
-                isActive={activeIndex === index}
-                onClick={handleEnvelopeClick}
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
-                isMobile={true}
-              />
-            ))}
-          </div>
-
-          {list.length > 5 && (
-            <div className="text-center mt-3">
-              <p className="text-xs text-gray-500 animate-pulse">👈 Vuốt để xem thêm 👉</p>
-            </div>
-          )}
-        </>
-      )
-    }
-
-    return (
-      <div
-        ref={envelopesContainerRef}
-        className="flex justify-center items-end relative"
-        style={{ minHeight: '400px', perspective: '1000px' }}
-      >
-        {list.map((amount, index) => (
-          <EnvelopeItem
-            key={index}
-            index={index}
-            imageUrl={getEnvelopeImage(index, randomEnvelopeImages)}
-            fanStyle={getFanStyle(index, list.length)}
-            leftPercent={getLeftPercent(index, list.length)}
-            isActive={activeIndex === index}
-            onClick={handleEnvelopeClick}
-            onConfirm={handleConfirm}
-            onCancel={handleCancel}
-            isMobile={false}
-          />
-        ))}
-      </div>
-    )
-  }
 
   return (
-    <div className="relative min-h-screen py-8 px-4">
+    <div className="relative py-8 px-4">
       <Decorations />
 
       {confetti.map((item) => (
@@ -311,9 +167,35 @@ function DrawPage() {
         ) : (
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-8 mb-4">
             <p className="text-center text-lg md:text-xl text-gray-700 mb-4 md:mb-8">
-              👆 Chọn một phong bao lì xì để rút thăm
+              {isMobile ? (
+                <>👈 Vuốt trái/phải để chọn lì xì 👉</>
+              ) : (
+                <>👆 Chọn một phong bao lì xì để rút thăm</>
+              )}
             </p>
-            {renderEnvelopes()}
+            {isMobile ? (
+              <DrawPageMobile
+                list={list}
+                activeIndex={activeIndex}
+                setActiveIndex={setActiveIndex}
+                showResult={showResult}
+                randomEnvelopeImages={randomEnvelopeImages}
+                onEnvelopeClick={handleEnvelopeClick}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+              />
+            ) : (
+              <DrawPageDesktop
+                list={list}
+                activeIndex={activeIndex}
+                setActiveIndex={setActiveIndex}
+                showResult={showResult}
+                randomEnvelopeImages={randomEnvelopeImages}
+                onEnvelopeClick={handleEnvelopeClick}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+              />
+            )}
           </div>
         )}
 
