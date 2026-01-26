@@ -17,7 +17,6 @@ const EnvelopeItem = ({
     ? (isActive ? '-96px' : '-60px')
     : (isActive ? '-120px' : '-100px')
 
-  // Nếu leftPercent là 0 và mobile, dùng relative positioning vì đã được wrap trong div định vị
   const useRelativePosition = isMobile && leftPercent === 0
   
   return (
@@ -33,21 +32,23 @@ const EnvelopeItem = ({
         marginLeft: isMobile ? '0' : marginLeft,
         zIndex: isActive ? 9999 : Math.round(fanStyle.zIndex),
         transition: '0.3s ease-in-out',
+        scale: isActive ? 1.2 : 1,
       }}
     >
       <div className="relative">
         <img
           src={imageUrl}
           alt={`Phong bao lì xì ${index + 1}`}
-          className={`h-auto object-contain drop-shadow-xl transition-all duration-300 ${imageWidth} ${
+          className={`h-auto object-contain drop-shadow-xl transition-all duration-300 ${
             !isMobile ? 'group-hover:drop-shadow-2xl' : ''
           }`}
           style={{
             filter: isActive
-              ? `drop-shadow(0 ${isMobile ? '10px' : '20px'} ${isMobile ? '20px' : '40px'} rgba(251, 191, 36, 0.8))`
+              ? `drop-shadow(0 ${isMobile ? '8px' : '20px'} ${isMobile ? '8px' : '40px'} rgba(251, 191, 36, 0.8))`
               : isMobile
               ? 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))'
               : 'drop-shadow(0 10px 25px rgba(0,0,0,0.4))',
+            width: isMobile ? '120px' : '160px',
           }}
           onError={(e) => {
             e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="300"%3E%3Crect fill="%23dc2626" width="200" height="300" rx="10"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23fbbf24" font-size="60" font-weight="bold"%3E🧧%3C/text%3E%3C/svg%3E'

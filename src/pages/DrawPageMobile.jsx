@@ -19,6 +19,14 @@ function DrawPageMobile({
   const startActiveIndex = useRef(null)
   const [scrollProgress, setScrollProgress] = useState(0)
 
+  // Set activeIndex mặc định là index ở giữa khi list thay đổi
+  useEffect(() => {
+    if (list.length > 0 && activeIndex === null) {
+      const middleIndex = Math.floor((list.length - 1) / 2)
+      setActiveIndex(middleIndex)
+    }
+  }, [list.length, activeIndex, setActiveIndex])
+
   // Handle scroll để tạo hiệu ứng di chuyển theo elip trên mobile
   useEffect(() => {
     const container = scrollContainerRef.current
@@ -52,7 +60,12 @@ function DrawPageMobile({
       touchStartX.current = touch.clientX
       touchStartY.current = touch.clientY
       // Lưu index ban đầu khi bắt đầu vuốt
-      startActiveIndex.current = activeIndex === null ? 0 : activeIndex
+      if (activeIndex === null && list.length > 0) {
+        const middleIndex = Math.floor((list.length - 1) / 2)
+        startActiveIndex.current = middleIndex
+      } else {
+        startActiveIndex.current = activeIndex
+      }
     }
 
     const handleTouchMove = (e) => {
@@ -68,6 +81,9 @@ function DrawPageMobile({
 
       // Chỉ xử lý swipe ngang (deltaX lớn hơn deltaY)
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+        // Ngăn scroll dọc khi đang scroll ngang
+        e.preventDefault()
+        
         // Tính toán số index dựa trên khoảng cách vuốt từ điểm bắt đầu
         // Mỗi 100px vuốt = 1 index, càng xa càng nhiều
         const indexChange = Math.floor(Math.abs(deltaX) / 100)
@@ -93,7 +109,7 @@ function DrawPageMobile({
     }
 
     container.addEventListener('touchstart', handleTouchStart, { passive: true })
-    container.addEventListener('touchmove', handleTouchMove, { passive: true })
+    container.addEventListener('touchmove', handleTouchMove, { passive: false })
     container.addEventListener('touchend', handleTouchEnd, { passive: true })
 
     return () => {
@@ -130,6 +146,7 @@ function DrawPageMobile({
           width: 'calc(100% + 2rem)',
           marginLeft: '-1rem',
           marginRight: '-1rem',
+          overscrollBehavior: 'contain',
         }}
       >
         <div
@@ -148,9 +165,10 @@ function DrawPageMobile({
         style={{ 
           width: '100%', 
           minHeight: '300px', 
-          // perspective: '1000px',
           overflow: 'hidden',
           position: 'relative',
+          touchAction: 'pan-x',
+          overscrollBehavior: 'contain',
         }}
       >
         {list.map((amount, index) => {
