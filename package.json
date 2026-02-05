@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
+  "homepage": "https://lixi.quocpha.com/",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -16,6 +19,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "6.30.3",
+    "gh-pages": "^4.0.0",
     "vite": "5.4.21",
     "vite-plugin-ejs": "^1.7.0"
   },
