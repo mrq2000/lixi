@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { saveLuckyMoneyList, getLuckyMoneyList } from '../utils/storage'
+import { saveLuckyMoneyList, getLuckyMoneyList, saveDrawMode, getDrawMode } from '../utils/storage'
 import Decorations from '../components/Decorations'
 
 const AMOUNTS = [10000, 20000, 50000, 100000, 200000, 500000]
@@ -16,6 +16,8 @@ function SetupPage() {
     500000: 0,
   })
   const [totalEnvelopes, setTotalEnvelopes] = useState(0)
+  const [drawMode, setDrawMode] = useState('regular')
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     const existingList = getLuckyMoneyList()
@@ -29,7 +31,19 @@ function SetupPage() {
       setQuantities(counts)
       setTotalEnvelopes(existingList.length)
     }
+    const savedMode = getDrawMode()
+    setDrawMode(savedMode)
+    setIsInitialized(true)
   }, [])
+
+  // Tự động lưu khi quantities thay đổi (sau khi đã khởi tạo)
+  useEffect(() => {
+    if (isInitialized) {
+      const list = generateList()
+      saveLuckyMoneyList(list)
+      setTotalEnvelopes(list.length)
+    }
+  }, [quantities, isInitialized])
 
   const handleQuantityChange = (amount, value) => {
     const numValue = Math.max(0, parseInt(value) || 0)
@@ -60,12 +74,6 @@ function SetupPage() {
     return shuffleArray(list)
   }
 
-  const handleSave = () => {
-    const list = generateList()
-    saveLuckyMoneyList(list)
-    setTotalEnvelopes(list.length)
-    alert(`Đã lưu ${list.length} phong bì lì xì! 🎉`)
-  }
 
   const total = Object.values(quantities).reduce((sum, qty) => sum + qty, 0)
 
@@ -136,13 +144,43 @@ function SetupPage() {
             </div>
           </div>
 
-          <div className="mt-4 md:mt-6 flex flex-col sm:flex-row gap-2 md:gap-4 justify-center">
-            <button
-              onClick={handleSave}
-              className="px-4 md:px-8 py-3 md:py-4 bg-red-600 text-white text-base md:text-xl font-bold rounded-xl hover:bg-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg cursor-pointer"
-            >
-              💾 Lưu Danh Sách
-            </button>
+          <div className="mt-4 md:mt-8 p-4 md:p-6 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl border-2 border-blue-300">
+            <div className="text-center mb-4">
+              <p className="text-lg md:text-xl font-bold text-blue-800 mb-3 md:mb-4">
+                Chọn chế độ rút thăm:
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    setDrawMode('regular')
+                    saveDrawMode('regular')
+                  }}
+                  className={`px-4 md:px-6 py-2 md:py-3 text-base md:text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200 shadow-lg cursor-pointer ${
+                    drawMode === 'regular'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white text-red-600 border-2 border-red-300'
+                  }`}
+                >
+                  🎲 Rút thăm thường
+                </button>
+                <button
+                  onClick={() => {
+                    setDrawMode('wheel')
+                    saveDrawMode('wheel')
+                  }}
+                  className={`px-4 md:px-6 py-2 md:py-3 text-base md:text-lg font-bold rounded-xl transform hover:scale-105 transition-all duration-200 shadow-lg cursor-pointer ${
+                    drawMode === 'wheel'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white text-red-600 border-2 border-red-300'
+                  }`}
+                >
+                  🎡 Vòng quay may mắn
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 md:mt-6 flex justify-center">
             <button
               onClick={() => navigate('/draw')}
               className="px-4 md:px-8 py-3 md:py-4 bg-green-600 text-white text-base md:text-xl font-bold rounded-xl hover:bg-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg cursor-pointer"

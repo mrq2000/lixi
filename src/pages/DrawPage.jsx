@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getLuckyMoneyList, removeFromList } from '../utils/storage'
+import { getLuckyMoneyList, removeFromList, getDrawMode } from '../utils/storage'
 import Decorations from '../components/Decorations'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { getEnvelopeImage, ENVELOPE_IMAGES, formatAmount } from '../utils/envelopeUtils'
 import DrawPageMobile from './DrawPageMobile'
 import DrawPageDesktop from './DrawPageDesktop'
+import Wheel from '../components/Wheel'
 
 function DrawPage() {
   const [list, setList] = useState([])
@@ -14,6 +15,7 @@ function DrawPage() {
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [selectedImage, setSelectedImage] = useState(null)
   const [activeIndex, setActiveIndex] = useState(null)
+  const [drawMode, setDrawMode] = useState('regular')
   const isMobile = useIsMobile()
 
   const randomEnvelopeImages = useMemo(() => {
@@ -22,6 +24,8 @@ function DrawPage() {
 
   useEffect(() => {
     loadList()
+    const mode = getDrawMode()
+    setDrawMode(mode)
   }, [])
 
   const loadList = () => {
@@ -99,6 +103,15 @@ function DrawPage() {
     }
   }
 
+  const handleWheelSpinComplete = (amount, index) => {
+    const image = getEnvelopeImage(index, randomEnvelopeImages)
+    setSelectedIndex(index)
+    setSelectedImage(image)
+    setDrawnAmount({ amount, index })
+    setShowResult(true)
+    createConfetti()
+  }
+
 
   return (
     <div className="relative py-8 px-4">
@@ -163,6 +176,10 @@ function DrawPage() {
                 </button>
               </div>
             </div>
+          </div>
+        ) : drawMode === 'wheel' ? (
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-8 mb-4">
+            <Wheel list={list} onSpinComplete={handleWheelSpinComplete} />
           </div>
         ) : (
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-8 mb-4">
